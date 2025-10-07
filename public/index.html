@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Express App</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <h1>Welcome to Express App</h1>
+        <p>This is a simple Express.js application.</p>
+        
+        <div class="card">
+            <h2>API Endpoints</h2>
+            <ul>
+                <li><a href="/api/items" target="_blank">/api/items</a> - Get all items</li>
+            </ul>
+        </div>
+        
+        <div class="items-container">
+            <h2>Items</h2>
+            <ul id="items-list"></ul>
+            <button id="load-items">Load Items</button>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
