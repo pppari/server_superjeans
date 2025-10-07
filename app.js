@@ -152,7 +152,6 @@ const User = require('./schema/user.schema');
 const toObjectId = require('./utils/toObjectId');
 
 const app = express();
-const PORT = process.env.PORT || 8002;
 
 // Middleware
 app.use(cors());
