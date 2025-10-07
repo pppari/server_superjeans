@@ -6,139 +6,8 @@ const cors = require('cors');
 const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
-
-// ===== DEBUGGER: เริ่ม =====
-// เปิด/ปิดด้วย ENV: DEBUG_STARTUP=1 และ/หรือ DEBUG_REQUIRE=1
-(function setupDebug() {
-  const DEBUG_STARTUP = process.env.DEBUG_STARTUP !== '0'; // เปิดโดยค่าเริ่มต้น
-  const DEBUG_REQUIRE = process.env.DEBUG_REQUIRE === '1';
-
-  // แพตช์ require เพื่อ log ทุกครั้งที่ resolve/โหลดโมดูล (ไม่บังคับ)
-  if (DEBUG_REQUIRE) {
-    const Module = require('module');
-    const _resolveFilename = Module._resolveFilename;
-    const _load = Module._load;
-
-    Module._resolveFilename = function(request, parent, isMain, options) {
-      try {
-        const out = _resolveFilename.call(this, request, parent, isMain, options);
-        console.log('[REQUIRE:RESOLVED]', { request, from: parent && parent.filename, resolved: out });
-        return out;
-      } catch (e) {
-        console.log('[REQUIRE:RESOLVE_FAIL]', { request, from: parent && parent.filename, error: e && e.message });
-        throw e;
-      }
-    };
-
-    Module._load = function(request, parent, isMain) {
-      try {
-        const res = _load.call(this, request, parent, isMain);
-        return res;
-      } catch (e) {
-        console.log('[REQUIRE:LOAD_FAIL]', { request, from: parent && parent.filename, error: e && e.message });
-        throw e;
-      }
-    };
-  }
-
-  if (!DEBUG_STARTUP) return;
-
-  const cwd = process.cwd();
-  const here = __dirname;
-
-  console.log('=== DEBUG: STARTUP ENV ===');
-  console.log({
-    node: process.version,
-    platform: process.platform,
-    cwd,
-    __dirname: here,
-    DEBUG_STARTUP,
-    DEBUG_REQUIRE
-  });
-
-  function list(p) {
-    try {
-      const abs = path.resolve(here, p);
-      const exists = fs.existsSync(abs);
-      console.log(`[LS] ${p} -> ${abs} exists=${exists}`);
-      if (exists) {
-        const files = fs.readdirSync(abs);
-        console.log(`[LS] ${p} entries:`, files);
-      }
-    } catch (e) {
-      console.log(`[LS:ERR] ${p}`, e.message);
-    }
-  }
-
-  function check(p) {
-    const abs = path.resolve(here, p);
-    const exists = fs.existsSync(abs);
-    console.log('[CHECK]', { rel: p, abs, exists });
-    if (exists) {
-      try {
-        const st = fs.statSync(abs);
-        console.log('[CHECK:STAT]', { rel: p, isFile: st.isFile(), size: st.size });
-      } catch (e) {
-        console.log('[CHECK:STAT_ERR]', p, e.message);
-      }
-    }
-  }
-
-  // ไล่ดูโฟลเดอร์/ไฟล์ที่น่าจะเกี่ยวข้องกับ error MODULE_NOT_FOUND
-  list('.');
-  list('models');
-  list('schema');
-  list('schemas');
-
-  // ตรวจเส้นทางที่พบบ่อย (เอกพจน์/พหูพจน์ และ .js/.JS)
-  [
-    'schema/ProductColorImage.schema.js',
-    'schema/ProductColorImage.schema.JS',
-    'schemas/ProductColorImage.schema.js',
-    'schemas/ProductColorImage.schema.JS',
-    'models/productColorImage.model.js'
-  ].forEach(check);
-
-  // ลองค้นหาแบบคร่าว ๆ (ลึกไม่เกิน 3)
-  try {
-    const walkMax = 3;
-    function walk(dir, depth = 0) {
-      if (depth > walkMax) return;
-      let ents = [];
-      try {
-        ents = fs.readdirSync(dir, { withFileTypes: true });
-      } catch { return; }
-      for (const ent of ents) {
-        const p = path.join(dir, ent.name);
-        if (ent.isDirectory()) walk(p, depth + 1);
-        else if (/product.*color.*image.*schema\.(js|ts)$/i.test(ent.name)) {
-          console.log('[FIND-LIKE]', p);
-        }
-      }
-    }
-    walk(here, 0);
-  } catch (e) {
-    console.log('[FIND-LIKE:ERR]', e.message);
-  }
-
-  // จับ uncaught exception เพื่อพิมพ์ context เพิ่ม
-  process.on('uncaughtException', (err) => {
-    console.error('=== UNCAUGHT EXCEPTION ===');
-    console.error(err && err.stack || err);
-    console.log('=== LAST CHECK HINTS ===');
-    [
-      'schema/ProductColorImage.schema.js',
-      'schemas/ProductColorImage.schema.js'
-    ].forEach(check);
-    process.exit(1);
-  });
-})();
-// ===== DEBUGGER: จบ =====
-
 const mongoose = require('./config/mongoose');
-// NOTE: ย้าย require('./routes') ลงมาหลังบล็อกดีบัก เพื่อให้ log ข้างบนรันก่อน
-// const routes = require('./routes');
-
+const routes = require('./routes');
 const initializeStripe = require('./utils/stripe');
 const Order = require("./schema/order.schema");
 const OrderItem = require("./schema/orderItems.schema");
@@ -151,7 +20,11 @@ const { sendOrderNotify, sendBillingEmail } = require('./middlewares/nodemailer'
 const User = require('./schema/user.schema');
 const toObjectId = require('./utils/toObjectId');
 
+
+
+
 const app = express();
+const PORT = process.env.PORT || 8002;
 
 // Middleware
 app.use(cors());
@@ -300,6 +173,7 @@ app.post("/api/webhook/stripe",
   }
 );
 
+
 // เพิ่มขนาดข้อมูลที่ body-parser สามารถรับได้
 app.use(bodyParser.json({ limit: '50mb' }));
 app.use(bodyParser.urlencoded({ extended: true, limit: '50mb' }));
@@ -382,8 +256,7 @@ app.use(express.static(path.join(__dirname, 'public')));
 // ให้บริการไฟล์รูปภาพจากโฟลเดอร์ uploads
 app.use('/uploads', express.static(path.join(__dirname, 'public/uploads')));
 
-// (ย้ายมา) ใช้งาน routes หลังจากดีบักรันแล้ว
-const routes = require('./routes');
+// ใช้งาน routes หลัก
 app.use('/api', routes);
 
 // Route หลัก
@@ -403,7 +276,6 @@ app.get('/api/items', (req, res) => {
 });
 
 // เริ่มต้นเซิร์ฟเวอร์
-const PORT = process.env.PORT || 8002;
 app.listen(PORT, () => {
   console.log(`เซิร์ฟเวอร์กำลังทำงานที่พอร์ต ${PORT}`);
 });
