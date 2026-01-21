@@ -159,7 +159,7 @@ const getTopProducts = async () => {
 
     return populatedProducts;
   } catch (error) {
-    console.error("❌ เกิดข้อผิดพลาดในการดึงสินค้ายอดนิยม:", error);
+    console.error("เกิดข้อผิดพลาดในการดึงสินค้ายอดนิยม:", error);
     throw error;
   }
 };

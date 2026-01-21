@@ -23,7 +23,8 @@ const generateSKU = async () => {
 // สร้าง Product ใหม่
 const createProduct = async (req, res) => {
   try {
-    const { name, sku, description, price, weight, material, dimensions, categoryId, subCategoryId, roomId } = req.body;
+    const { name, description, price, weight, material, dimensions, categoryId, subCategoryId, roomId } = req.body;
+
 
     if (!name || !price) {
       return res.status(400).json({ error: 'ต้องระบุชื่อและราคาสินค้า' });
@@ -42,7 +43,6 @@ const createProduct = async (req, res) => {
 
     const product = await productModel.createProduct({
       name,
-      sku,
       description,
       price,
       weight,
@@ -53,13 +53,15 @@ const createProduct = async (req, res) => {
       roomId
     });
 
+
     res.status(201).json(product);
-  } catch (error) {
+  }  catch (error) {
     console.error('เกิดข้อผิดพลาดในการสร้างสินค้า:', error);
-    if (error.code === 11000) return res.status(400).json({ error: 'มีสินค้านี้อยู่แล้ว' });
-    return res.status(500).json({ error: 'ไม่สามารถสร้างสินค้าได้', details: error.message });
+    return res.status(400).json({
+      error: error.message
+    });
   }
-};
+}; 
 
 // ดึงข้อมูล Product ทั้งหมด
 const getAllProducts = async (req, res) => {
