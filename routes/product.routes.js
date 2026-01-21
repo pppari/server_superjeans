@@ -11,7 +11,6 @@ router.get('/', productController.getAllProducts);
 // ดึงสินค้า + สี
 router.get('/with-colors', productController.getProductsWithColors);
 
-
 // สินค้าขายดี
 router.get('/top-product', productController.getTopProducts);
 

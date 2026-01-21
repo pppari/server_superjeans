@@ -98,7 +98,7 @@ const getProductsWithColors = async (req, res) => {
 
         return {
           ...product.toObject(),
-          colors,
+          colors, // << ใส่สีเข้าไปตรงนี้
         };
       })
     );
@@ -106,12 +106,10 @@ const getProductsWithColors = async (req, res) => {
     res.status(200).json(result);
   } catch (error) {
     console.error("getProductsWithColors error:", error);
-    res.status(400).json({
-      message: "โหลดสินค้าไม่สำเร็จ",
-      error: error.message,
-    });
+    res.status(400).json({ error: error.message });
   }
 };
+
 
 
 
@@ -206,10 +204,11 @@ const deleteProduct = async (req, res) => {
 module.exports = {
   createProduct,
   getAllProducts,
-  getProductsWithColors, // 👈 เพิ่ม
   getProductById,
   getTopProducts,
   updateProduct,
-  deleteProduct
+  deleteProduct,
+  getProductsWithColors, // 👈 เพิ่มบรรทัดนี้
 };
+
 
