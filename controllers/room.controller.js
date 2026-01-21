@@ -1,8 +1,7 @@
-const { default: mongoose } = require('mongoose');
+const mongoose = require('mongoose');
 const roomService = require('../models/room.model');
-const path = require('path')
-const fs = require('fs')
-const toObjectId = require("../utils/toObjectId");
+const path = require('path');
+const fs = require('fs');
 
 // Get all rooms
 const getRooms = async (req, res) => {
@@ -14,6 +13,7 @@ const getRooms = async (req, res) => {
   }
 };
 
+// Get room by ID
 const getRoomById = async (req, res) => {
   const { id } = req.params;
 
@@ -22,14 +22,15 @@ const getRoomById = async (req, res) => {
   }
 
   try {
-    const room = await roomService.getRoomById(new mongoose.Types.ObjectId(id));
+    const room = await roomService.getRoomById(
+      new mongoose.Types.ObjectId(id)
+    );
     res.status(200).json(room);
   } catch (err) {
     console.error('Error get room by id:', err);
     res.status(500).json({ message: err.message });
   }
 };
-
 
 // Create a new room
 const createRoom = async (req, res) => {
@@ -49,16 +50,16 @@ const createRoom = async (req, res) => {
   }
 };
 
-
 // Update an existing room
 const updateRoom = async (req, res) => {
   const { id } = req.params;
   const { name } = req.body;
+
   if (!mongoose.Types.ObjectId.isValid(id)) {
     return res.status(400).json({ message: 'ID ไม่ถูกต้อง' });
   }
-  const objectId = new mongoose.Types.ObjectId(id);
 
+  const objectId = new mongoose.Types.ObjectId(id);
 
   try {
     const existingRoom = await roomService.getRoomById(objectId);
@@ -68,20 +69,29 @@ const updateRoom = async (req, res) => {
 
     let fileName = existingRoom.fileName;
 
-    // If new file uploaded
     if (req.file) {
       fileName = req.file.filename;
 
-      // Delete old image if exists
       if (existingRoom.fileName) {
-        const oldImgPath = path.resolve(__dirname, '..', 'public', 'uploads', 'room', existingRoom.fileName);
+        const oldImgPath = path.resolve(
+          __dirname,
+          '..',
+          'public',
+          'uploads',
+          'room',
+          existingRoom.fileName
+        );
         if (fs.existsSync(oldImgPath)) {
           fs.unlinkSync(oldImgPath);
         }
       }
     }
 
-    const updatedRoom = await roomService.updateRoom(objectId, { name, fileName });
+    const updatedRoom = await roomService.updateRoom(objectId, {
+      name,
+      fileName,
+    });
+
     res.status(200).json(updatedRoom);
   } catch (err) {
     console.error('Error updating room:', err);
@@ -92,11 +102,12 @@ const updateRoom = async (req, res) => {
 // Delete a room
 const deleteRoom = async (req, res) => {
   const { id } = req.params;
+
   if (!mongoose.Types.ObjectId.isValid(id)) {
     return res.status(400).json({ message: 'ID ไม่ถูกต้อง' });
   }
-  const objectId = new mongoose.Types.ObjectId(id);
 
+  const objectId = new mongoose.Types.ObjectId(id);
 
   try {
     const deletedRoom = await roomService.deleteRoom(objectId);
@@ -105,10 +116,15 @@ const deleteRoom = async (req, res) => {
       return res.status(404).json({ message: 'ไม่พบห้องที่ต้องการลบ' });
     }
 
-    const fileName = deletedRoom.fileName;
-
-    if (fileName) {
-      const imgPath = path.resolve(__dirname, '..', 'public', 'uploads', 'room', fileName);
+    if (deletedRoom.fileName) {
+      const imgPath = path.resolve(
+        __dirname,
+        '..',
+        'public',
+        'uploads',
+        'room',
+        deletedRoom.fileName
+      );
       if (fs.existsSync(imgPath)) {
         fs.unlinkSync(imgPath);
       }
@@ -121,11 +137,10 @@ const deleteRoom = async (req, res) => {
   }
 };
 
-
 module.exports = {
   getRooms,
   getRoomById,
   createRoom,
   updateRoom,
-  deleteRoom
+  deleteRoom,
 };
