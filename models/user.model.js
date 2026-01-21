@@ -9,6 +9,11 @@ const createUser = async (data) => {
         throw new Error('กรุณาระบุอีเมลและรหัสผ่าน');
     }
 
+    const exists = await User.findOne({ email });
+    if (exists) {
+        throw new Error('อีเมลนี้ถูกใช้แล้ว');
+    }
+
     const user = new User({
         email: email.trim(),
         password: password.trim(),
@@ -17,13 +22,14 @@ const createUser = async (data) => {
     return await user.save();
 };
 
+
 // ✅ Get All Users + Address
 const getAllUsers = async () => {
     return await User.aggregate([
         { $match: { isDeleted: { $ne: true } } },
         {
             $lookup: {
-                from: 'addresses',        // ชื่อ collection (สำคัญ)
+                from: 'addresses',
                 localField: '_id',
                 foreignField: 'userId',
                 as: 'addresses'
@@ -31,6 +37,7 @@ const getAllUsers = async () => {
         }
     ]);
 };
+
 
 // ✅ Get User By ID
 const getUserById = async (id) => {
