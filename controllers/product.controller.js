@@ -23,7 +23,7 @@ const generateSKU = async () => {
 // สร้าง Product ใหม่
 const createProduct = async (req, res) => {
   try {
-    const { name, description, price, weight, material, dimensions, categoryId, subCategoryId, roomId } = req.body;
+    const { name, sku, description, price, weight, material, dimensions, categoryId, subCategoryId, roomId } = req.body;
 
     if (!name || !price) {
       return res.status(400).json({ error: 'ต้องระบุชื่อและราคาสินค้า' });
@@ -42,6 +42,7 @@ const createProduct = async (req, res) => {
 
     const product = await productModel.createProduct({
       name,
+      sku,
       description,
       price,
       weight,
@@ -89,6 +90,7 @@ const getProductById = async (req, res) => {
   try {
     const { id } = req.params;
 
+
     if (!mongoose.Types.ObjectId.isValid(id)) {
       return res.status(400).json({ error: 'id สินค้าไม่ถูกต้อง' });
     }
@@ -126,19 +128,17 @@ const updateProduct = async (req, res) => {
     const { id } = req.params;
     const { name, description, price, weight, material, dimensions, categoryId, subCategoryId, roomId } = req.body;
 
-    if (!mongoose.Types.ObjectId.isValid(id)) {
-      return res.status(400).json({ error: 'id สินค้าไม่ถูกต้อง' });
-    }
 
     if (categoryId) {
       const category = await categoryModel.getCategoryById(categoryId);
-      if (!category) {
-        return res.status(404).json({ error: 'ไม่พบหมวดหมู่' });
-      }
+      if (!category) return res.status(404).json({ error: 'ไม่พบหมวดหมู่' });
     }
 
-    const product = await productModel.updateProduct(id, {
+    const sku = await generateSKU();
+
+    const product = await productModel.createProduct({
       name,
+      sku,
       description,
       price,
       weight,
@@ -149,13 +149,13 @@ const updateProduct = async (req, res) => {
       roomId
     });
 
+
     res.json(product);
   } catch (error) {
     console.error('เกิดข้อผิดพลาดในการอัพเดตสินค้า:', error);
     res.status(500).json({ error: 'ไม่สามารถอัพเดตสินค้าได้', details: error.message });
   }
 };
-
 
 // ลบ Product
 const deleteProduct = async (req, res) => {
