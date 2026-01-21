@@ -4,9 +4,8 @@ const toObjectId = require('../utils/toObjectId');
 // Get all users
 const getAllUsers = async (req, res) => {
     try {
-        const users = await userService.getAllUsers();
+        const users = await userModel.getAllUsers();
         res.json({ success: true, data: users });
-
     } catch (error) {
         res.status(500).json({
             success: false,

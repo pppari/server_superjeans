@@ -23,29 +23,15 @@ const createUser = async (data) => {
 };
 
 // ✅ Get All Users
-const getAllUsers = async () => {
-    return await User.aggregate([
-        {
-            $match: { isDeleted: { $ne: true } }
-        },
-        {
-            $lookup: {
-                from: 'addresses',       
-                localField: '_id',
-                foreignField: 'userId',
-                as: 'address'
-            }
-        },
-        {
-            $unwind: {
-                path: '$address',
-                preserveNullAndEmptyArrays: true
-            }
-        },
-        {
-            $sort: { created_at: -1 }
-        }
-    ]);
+const User = require('./user.schema');
+
+exports.getAllUsers = async () => {
+  return await User.find({ isDeleted: false })
+    .populate({
+      path: 'addresses',
+      match: { isDeleted: false },
+      select: 'fullname phone address tambon amphure province zip_code'
+    });
 };
 
 
