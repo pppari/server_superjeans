@@ -72,7 +72,9 @@ const getAllProducts = async (req, res) => {
 
     const productsWithImages = await Promise.all(
       products.map(async (product) => {
-        const colors = await productColorModel.getByProductId(toObjectId(product._id));
+        // const colors = await productColorModel.getByProductId(toObjectId(product._id));
+        
+        const colors = await productColorModel.getByProductId(product._id);
         const mainImage = colors && colors.length > 0 ? colors[0].main_img : null;
         return { ...product.toObject(), main_img: mainImage };
       })
@@ -88,17 +90,22 @@ const getAllProducts = async (req, res) => {
 // ดึงสินค้า + สีสินค้า
 const getProductsWithColors = async (req, res) => {
   try {
-    const products = await productModel.getAllProducts();
+    const products = await productModel.getAllProducts(null, null, null, null);
 
     const result = await Promise.all(
       products.map(async (product) => {
-        const colors = await productColorModel.getByProductId(
-          toObjectId(product._id)
-        );
+        let colors = [];
+
+        try {
+          // ✅ ต้อง assign ค่า
+          colors = await productColorModel.getByProductId(product._id);
+        } catch (err) {
+          console.warn("ไม่พบสีของสินค้า:", product._id);
+        }
 
         return {
           ...product.toObject(),
-          colors, // << ใส่สีเข้าไปตรงนี้
+          colors,
         };
       })
     );
@@ -106,10 +113,9 @@ const getProductsWithColors = async (req, res) => {
     res.status(200).json(result);
   } catch (error) {
     console.error("getProductsWithColors error:", error);
-    res.status(400).json({ error: error.message });
+    res.status(500).json({ error: error.message });
   }
 };
-
 
 
 
