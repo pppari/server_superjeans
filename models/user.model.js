@@ -24,8 +24,30 @@ const createUser = async (data) => {
 
 // ✅ Get All Users
 const getAllUsers = async () => {
-    return await User.find({ isDeleted: { $ne: true } }).sort({ created_at: -1 });
+    return await User.aggregate([
+        {
+            $match: { isDeleted: { $ne: true } }
+        },
+        {
+            $lookup: {
+                from: 'addresses',       
+                localField: '_id',
+                foreignField: 'userId',
+                as: 'address'
+            }
+        },
+        {
+            $unwind: {
+                path: '$address',
+                preserveNullAndEmptyArrays: true
+            }
+        },
+        {
+            $sort: { created_at: -1 }
+        }
+    ]);
 };
+
 
 // ✅ Get User By ID
 const getUserById = async (id) => {
@@ -36,7 +58,7 @@ const getUserById = async (id) => {
 // ✅ Get User By Email
 const getUserByEmail = async (email) => {
 
-    return await User.findOne({email: email});
+    return await User.findOne({ email: email });
 };
 
 // ✅ Update User

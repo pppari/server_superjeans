@@ -4,12 +4,9 @@ const toObjectId = require('../utils/toObjectId');
 // Get all users
 const getAllUsers = async (req, res) => {
     try {
-        const users = await userModel.getAllUsers();
-        res.status(200).json({
-            success: true,
-            data: users,
-            message: 'ดึงข้อมูลผู้ใช้ทั้งหมดสำเร็จ'
-        });
+        const users = await userService.getAllUsers();
+        res.json({ success: true, data: users });
+
     } catch (error) {
         res.status(500).json({
             success: false,
@@ -24,7 +21,7 @@ const getUserById = async (req, res) => {
     try {
         const { id } = req.params;
         const user = await userModel.getUserById(id);
-        
+
         if (!user) {
             return res.status(404).json({
                 success: false,
@@ -51,7 +48,7 @@ const createUser = async (req, res) => {
     try {
         const userData = req.body;
         const newUser = await userModel.createUser(userData);
-        
+
         res.status(201).json({
             success: true,
             data: newUser,
@@ -71,9 +68,9 @@ const updateUser = async (req, res) => {
     try {
         const { id } = req.params;
         const updateData = req.body;
-        
+
         const updatedUser = await userModel.updateUser(id, updateData);
-        
+
         res.status(200).json({
             success: true,
             data: updatedUser,
@@ -93,7 +90,7 @@ const deleteUser = async (req, res) => {
     try {
         const { id } = req.params;
         await userModel.deleteUser(toObjectId(id));
-        
+
         res.status(200).json({
             success: true,
             message: 'ลบผู้ใช้สำเร็จ'
@@ -112,7 +109,7 @@ const getUserByEmail = async (req, res) => {
     try {
         const { email } = req.params;
         const user = await userModel.getUserByEmail(email);
-        
+
         if (!user) {
             return res.status(404).json({
                 success: false,
