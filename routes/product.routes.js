@@ -8,11 +8,9 @@ router.post('/create', productController.createProduct);
 // ดึงข้อมูลสินค้าทั้งหมด
 router.get('/', productController.getAllProducts);
 
-// ดึงสินค้าพร้อมสี ✅ (เพิ่มใหม่)
-router.get(
-  '/with-colors',
-  productController.getProductsWithColors
-);
+// ดึงสินค้า + สี
+router.get('/with-colors', productController.getProductsWithColors);
+
 
 // สินค้าขายดี
 router.get('/top-product', productController.getTopProducts);

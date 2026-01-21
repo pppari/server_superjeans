@@ -55,13 +55,13 @@ const createProduct = async (req, res) => {
 
 
     res.status(201).json(product);
-  }  catch (error) {
+  } catch (error) {
     console.error('เกิดข้อผิดพลาดในการสร้างสินค้า:', error);
     return res.status(400).json({
       error: error.message
     });
   }
-}; 
+};
 
 // ดึงข้อมูล Product ทั้งหมด
 const getAllProducts = async (req, res) => {
@@ -82,6 +82,34 @@ const getAllProducts = async (req, res) => {
   } catch (error) {
     console.error('เกิดข้อผิดพลาดในการดึงข้อมูลสินค้า:', error);
     res.status(500).json({ error: 'ไม่สามารถดึงข้อมูลสินค้าได้' });
+  }
+};
+
+// ดึงสินค้า + สีสินค้า
+const getProductsWithColors = async (req, res) => {
+  try {
+    const products = await productModel.getAllProducts();
+
+    const result = await Promise.all(
+      products.map(async (product) => {
+        const colors = await productColorModel.getByProductId(
+          toObjectId(product._id)
+        );
+
+        return {
+          ...product.toObject(),
+          colors,
+        };
+      })
+    );
+
+    res.status(200).json(result);
+  } catch (error) {
+    console.error("getProductsWithColors error:", error);
+    res.status(400).json({
+      message: "โหลดสินค้าไม่สำเร็จ",
+      error: error.message,
+    });
   }
 };
 
@@ -178,8 +206,10 @@ const deleteProduct = async (req, res) => {
 module.exports = {
   createProduct,
   getAllProducts,
+  getProductsWithColors, // 👈 เพิ่ม
   getProductById,
   getTopProducts,
   updateProduct,
   deleteProduct
 };
+
