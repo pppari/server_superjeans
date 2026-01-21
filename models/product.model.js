@@ -174,7 +174,7 @@ const updateProduct = async (id, data) => {
     const updateData = {
       name: data.name,
       description: data.description,
-      price: data.price ? parseFloat(data.price) : undefined,
+      price: data.price != null ? parseFloat(data.price) : undefined,
       weight: data.weight,
       material: data.material,
       dimensions: data.dimensions,
@@ -183,7 +183,6 @@ const updateProduct = async (id, data) => {
       roomId: data.roomId ? new mongoose.Types.ObjectId(data.roomId) : undefined,
       updatedAt: new Date()
     };
-
 
     const updatedProduct = await Product.findByIdAndUpdate(
       id,
@@ -195,7 +194,9 @@ const updateProduct = async (id, data) => {
       .populate('roomId')
       .exec();
 
-    if (!updatedProduct) throw new Error('ไม่พบสินค้าที่ต้องการอัพเดต');
+    if (!updatedProduct) {
+      throw new Error('ไม่พบสินค้าที่ต้องการอัพเดต');
+    }
 
     return updatedProduct;
   } catch (error) {
@@ -203,6 +204,7 @@ const updateProduct = async (id, data) => {
     throw error;
   }
 };
+
 
 // ลบ Product
 const deleteProduct = async (id) => {
