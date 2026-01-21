@@ -11,7 +11,10 @@ const productSchema = new Schema({
   sku: {
     type: String,
     required: true,
-    trim: true
+    unique: true,
+    index: true,
+    trim: true,
+    immutable: true
   },
   description: {
     type: String,
@@ -69,31 +72,3 @@ const Product = mongoose.model('Product', productSchema);
 
 module.exports = Product;
 
-/* 
-
-Product ข้อมูลเบื้องต้น เช่น ชื่อ คำอธิบาย ประเภท ห้อง ขนาด น้ำหนัก
-
-Variant ข้อมูลเชิงลึก เช่น สี ราคา stock ขนาด รูปภาพ
-
-Product -> Variant[1], Variant[2] -> variantImages[1 ,2 ,3]
-
-
-Product = iPhone 16 -> 40,000 ฿
-
-Variant = ความจุ
-
-Variant[1] = 256 GB + 0 ฿
-Variant[2] = 512 GB + 2000 ฿
-Variant[3] = 1 TB + 5000 ฿
-
--------------------------------------
-
-Product = iPhone 16
-
-Variant = ความจุ
-
-Variant[1] = 256 GB -> 40,000 ฿
-Variant[2] = 512 GB ->  42,000 ฿
-Variant[3] = 1 TB ->  45,000 ฿
-
-*/

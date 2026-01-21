@@ -3,6 +3,23 @@ const categoryModel = require('../models/category.model');
 const productColorModel = require("../models/productColor.model");
 const toObjectId = require("../utils/toObjectId");
 
+const mongoose = require('mongoose');
+
+const generateSKU = async () => {
+  const today = new Date();
+
+  const start = new Date(today.setHours(0, 0, 0, 0));
+  const end = new Date(today.setHours(23, 59, 59, 999));
+
+  const dateStr = new Date().toISOString().slice(0, 10).replace(/-/g, '');
+
+  const countToday = await productModel.countProductsByDate(start, end);
+  const running = String(countToday + 1).padStart(3, '0');
+
+  return `PRO-${dateStr}-${running}`;
+};
+
+
 // สร้าง Product ใหม่
 const createProduct = async (req, res) => {
   try {
@@ -98,19 +115,21 @@ const getTopProducts = async (req, res) => {
 const updateProduct = async (req, res) => {
   try {
     const { id } = req.params;
-    const { name, sku, description, price, color, weight, material, dimensions, categoryId, subCategoryId, roomId } = req.body;
+    const { name, description, price, weight, material, dimensions, categoryId, subCategoryId, roomId } = req.body;
+
 
     if (categoryId) {
       const category = await categoryModel.getCategoryById(categoryId);
       if (!category) return res.status(404).json({ error: 'ไม่พบหมวดหมู่' });
     }
 
-    const product = await productModel.updateProduct(id, {
+    const sku = await generateSKU();
+
+    const product = await productModel.createProduct({
       name,
       sku,
       description,
       price,
-      color,
       weight,
       material,
       dimensions,
@@ -118,6 +137,7 @@ const updateProduct = async (req, res) => {
       subCategoryId,
       roomId
     });
+
 
     res.json(product);
   } catch (error) {

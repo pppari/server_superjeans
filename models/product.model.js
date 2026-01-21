@@ -4,6 +4,27 @@ const toObjectId = require("../utils/toObjectId");
 const OrderItem = require('../schema/orderItems.schema');
 const productColorModel = require("./productColor.model");
 
+const countProductsByDate = async (start, end) => {
+  return Product.countDocuments({
+    createdAt: { $gte: start, $lte: end },
+    isDeleted: { $ne: true }
+  });
+};
+
+const generateSKU = async () => {
+  const now = new Date();
+
+  const start = new Date(now.setHours(0, 0, 0, 0));
+  const end = new Date(now.setHours(23, 59, 59, 999));
+
+  const dateStr = new Date().toISOString().slice(0, 10).replace(/-/g, '');
+  const countToday = await countProductsByDate(start, end);
+  const running = String(countToday + 1).padStart(3, '0');
+
+  return `PRO-${dateStr}-${running}`;
+};
+
+
 // สร้าง Product
 const createProduct = async (data) => {
   try {
@@ -15,9 +36,11 @@ const createProduct = async (data) => {
       throw new Error('รูปแบบรหัสหมวดหมู่ไม่ถูกต้อง');
     }
 
+    const sku = await generateSKU();
+
     const productData = {
       name: data.name,
-      sku: data.sku.toUpperCase(),
+      sku, // 👈 auto SKU
       description: data.description || '',
       price: parseFloat(data.price),
       weight: data.weight || '',
@@ -147,20 +170,20 @@ const updateProduct = async (id, data) => {
       throw new Error('รูปแบบ ID ไม่ถูกต้อง');
     }
 
-    const updateData = {
-      name: data.name,
-      sku: data.sku,
-      description: data.description,
-      price: parseFloat(data.price),
-      color: data.color,
-      weight: data.weight || '',
-      material: data.material || '',
-      dimensions: data.dimensions || '',
-      categoryId: data.categoryId ? new mongoose.Types.ObjectId(data.categoryId) : null,
-      subCategoryId: data.subCategoryId ? new mongoose.Types.ObjectId(data.subCategoryId) : null,
-      roomId: data.roomId ? new mongoose.Types.ObjectId(data.roomId) : null,
-      updatedAt: new Date()
-    };
+    // const updateData = {
+    //   name: data.name,
+    //   sku: data.sku,
+    //   description: data.description,
+    //   price: parseFloat(data.price),
+    //   color: data.color,
+    //   weight: data.weight || '',
+    //   material: data.material || '',
+    //   dimensions: data.dimensions || '',
+    //   categoryId: data.categoryId ? new mongoose.Types.ObjectId(data.categoryId) : null,
+    //   subCategoryId: data.subCategoryId ? new mongoose.Types.ObjectId(data.subCategoryId) : null,
+    //   roomId: data.roomId ? new mongoose.Types.ObjectId(data.roomId) : null,
+    //   updatedAt: new Date()
+    // };
 
     const updatedProduct = await Product.findByIdAndUpdate(
       id,
@@ -208,5 +231,6 @@ module.exports = {
   getProductById,
   getTopProducts,
   updateProduct,
-  deleteProduct
+  deleteProduct,
+  countProductsByDate
 };
