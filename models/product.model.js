@@ -48,7 +48,8 @@ const createProduct = async (data) => {
       dimensions: data.dimensions || '',
       categoryId: new mongoose.Types.ObjectId(data.categoryId),
       subCategoryId: data.subCategoryId ? new mongoose.Types.ObjectId(data.subCategoryId) : null,
-      roomId: new mongoose.Types.ObjectId(data.roomId),
+      roomId: data.roomId ? new mongoose.Types.ObjectId(data.roomId) : null,
+
       createdAt: new Date(),
       updatedAt: new Date()
     };
@@ -170,20 +171,19 @@ const updateProduct = async (id, data) => {
       throw new Error('รูปแบบ ID ไม่ถูกต้อง');
     }
 
-    // const updateData = {
-    //   name: data.name,
-    //   sku: data.sku,
-    //   description: data.description,
-    //   price: parseFloat(data.price),
-    //   color: data.color,
-    //   weight: data.weight || '',
-    //   material: data.material || '',
-    //   dimensions: data.dimensions || '',
-    //   categoryId: data.categoryId ? new mongoose.Types.ObjectId(data.categoryId) : null,
-    //   subCategoryId: data.subCategoryId ? new mongoose.Types.ObjectId(data.subCategoryId) : null,
-    //   roomId: data.roomId ? new mongoose.Types.ObjectId(data.roomId) : null,
-    //   updatedAt: new Date()
-    // };
+    const updateData = {
+      name: data.name,
+      description: data.description,
+      price: data.price ? parseFloat(data.price) : undefined,
+      weight: data.weight,
+      material: data.material,
+      dimensions: data.dimensions,
+      categoryId: data.categoryId ? new mongoose.Types.ObjectId(data.categoryId) : undefined,
+      subCategoryId: data.subCategoryId ? new mongoose.Types.ObjectId(data.subCategoryId) : undefined,
+      roomId: data.roomId ? new mongoose.Types.ObjectId(data.roomId) : undefined,
+      updatedAt: new Date()
+    };
+
 
     const updatedProduct = await Product.findByIdAndUpdate(
       id,
