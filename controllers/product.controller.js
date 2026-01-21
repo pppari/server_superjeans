@@ -89,16 +89,26 @@ const getAllProducts = async (req, res) => {
 const getProductById = async (req, res) => {
   try {
     const { id } = req.params;
-    const product = await productModel.getProductById(id);
 
-    if (!product) return res.status(404).json({ error: 'ไม่พบสินค้า' });
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({ error: 'id สินค้าไม่ถูกต้อง' });
+    }
 
-    res.json(product);
+    const objectId = toObjectId(id);
+
+    const product = await productModel.getProductById(objectId);
+
+    if (!product) {
+      return res.status(404).json({ error: 'ไม่พบสินค้า' });
+    }
+
+    res.status(200).json(product);
   } catch (error) {
     console.error('เกิดข้อผิดพลาดในการดึงข้อมูลสินค้า:', error);
     res.status(500).json({ error: 'ไม่สามารถดึงข้อมูลสินค้าได้' });
   }
 };
+
 
 // ดึงสินค้ายอดนิยม
 const getTopProducts = async (req, res) => {
