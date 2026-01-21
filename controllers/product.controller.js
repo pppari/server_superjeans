@@ -128,17 +128,17 @@ const updateProduct = async (req, res) => {
     const { id } = req.params;
     const { name, description, price, weight, material, dimensions, categoryId, subCategoryId, roomId } = req.body;
 
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({ error: 'id สินค้าไม่ถูกต้อง' });
+    }
 
     if (categoryId) {
       const category = await categoryModel.getCategoryById(categoryId);
       if (!category) return res.status(404).json({ error: 'ไม่พบหมวดหมู่' });
     }
 
-    const sku = await generateSKU();
-
-    const product = await productModel.createProduct({
+    const product = await productModel.updateProduct(id, {
       name,
-      sku,
       description,
       price,
       weight,
@@ -149,6 +149,9 @@ const updateProduct = async (req, res) => {
       roomId
     });
 
+    if (!product) {
+      return res.status(404).json({ error: 'ไม่พบสินค้า' });
+    }
 
     res.json(product);
   } catch (error) {
@@ -156,6 +159,7 @@ const updateProduct = async (req, res) => {
     res.status(500).json({ error: 'ไม่สามารถอัพเดตสินค้าได้', details: error.message });
   }
 };
+
 
 // ลบ Product
 const deleteProduct = async (req, res) => {
