@@ -25,7 +25,6 @@ const createProduct = async (req, res) => {
   try {
     const { name, description, price, weight, material, dimensions, categoryId, subCategoryId, roomId } = req.body;
 
-
     if (!name || !price) {
       return res.status(400).json({ error: 'ต้องระบุชื่อและราคาสินค้า' });
     }
@@ -53,7 +52,6 @@ const createProduct = async (req, res) => {
       roomId
     });
 
-
     res.status(201).json(product);
   } catch (error) {
     console.error('เกิดข้อผิดพลาดในการสร้างสินค้า:', error);
@@ -67,16 +65,19 @@ const createProduct = async (req, res) => {
 const getAllProducts = async (req, res) => {
   const { r, c, sc, q } = req.query;  // r=room, c=category, sc=subCategory, q=search
   try {
-    // เรียก service/model โดยส่งค่าตรงๆ
     const products = await productModel.getAllProducts(r, c, sc, q);
 
     const productsWithImages = await Promise.all(
       products.map(async (product) => {
-        // const colors = await productColorModel.getByProductId(toObjectId(product._id));
-        
         const colors = await productColorModel.getByProductId(product._id);
         const mainImage = colors && colors.length > 0 ? colors[0].main_img : null;
-        return { ...product.toObject(), main_img: mainImage };
+
+        // ✅ รวม quantity จากทุก color เป็น stock
+        const stock = colors
+          ? colors.reduce((sum, color) => sum + (color.quantity || 0), 0)
+          : 0;
+
+        return { ...product.toObject(), main_img: mainImage, stock };
       })
     );
 
@@ -97,7 +98,6 @@ const getProductsWithColors = async (req, res) => {
         let colors = [];
 
         try {
-          // ✅ ต้อง assign ค่า
           colors = await productColorModel.getByProductId(product._id);
         } catch (err) {
           console.warn("ไม่พบสีของสินค้า:", product._id);
@@ -117,20 +117,16 @@ const getProductsWithColors = async (req, res) => {
   }
 };
 
-
-
 // ดึงข้อมูล Product ตาม ID
 const getProductById = async (req, res) => {
   try {
     const { id } = req.params;
-
 
     if (!mongoose.Types.ObjectId.isValid(id)) {
       return res.status(400).json({ error: 'id สินค้าไม่ถูกต้อง' });
     }
 
     const objectId = toObjectId(id);
-
     const product = await productModel.getProductById(objectId);
 
     if (!product) {
@@ -143,7 +139,6 @@ const getProductById = async (req, res) => {
     res.status(500).json({ error: 'ไม่สามารถดึงข้อมูลสินค้าได้' });
   }
 };
-
 
 // ดึงสินค้ายอดนิยม
 const getTopProducts = async (req, res) => {
@@ -194,7 +189,6 @@ const updateProduct = async (req, res) => {
   }
 };
 
-
 // ลบ Product
 const deleteProduct = async (req, res) => {
   try {
@@ -214,7 +208,5 @@ module.exports = {
   getTopProducts,
   updateProduct,
   deleteProduct,
-  getProductsWithColors, // 👈 เพิ่มบรรทัดนี้
+  getProductsWithColors,
 };
-
-
